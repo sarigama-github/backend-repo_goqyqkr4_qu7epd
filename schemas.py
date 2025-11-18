@@ -12,7 +12,7 @@ Model name is converted to lowercase for the collection name:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Literal
 
 # Example schemas (replace with your own):
 
@@ -38,8 +38,38 @@ class Product(BaseModel):
     category: str = Field(..., description="Product category")
     in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
 # --------------------------------------------------
+# DEX Schemas
+# --------------------------------------------------
+
+class Market(BaseModel):
+    symbol: Literal["BTC", "ETH", "SOL", "BNB", "ADA"] = Field(..., description="Base asset symbol")
+    quote: Literal["USDT", "USD"] = Field("USDT", description="Quote asset")
+    max_leverage: int = Field(50, ge=1, le=200)
+    taker_fee_bps: int = Field(8, ge=0, le=1000, description="Taker fee in basis points (1/100 of a percent)")
+    maker_fee_bps: int = Field(2, ge=0, le=1000, description="Maker fee in basis points")
+    status: Literal["active", "paused"] = Field("active")
+
+class Position(BaseModel):
+    wallet: str = Field(..., description="User wallet address")
+    symbol: Literal["BTC", "ETH", "SOL", "BNB", "ADA"]
+    side: Literal["long", "short"]
+    leverage: int = Field(..., ge=1, le=200)
+    size_usd: float = Field(..., gt=0, description="Notional position size in USD")
+    entry_price: float = Field(..., gt=0)
+    margin_usd: float = Field(..., gt=0)
+    liquidation_price: float = Field(..., gt=0)
+    status: Literal["open", "closed"] = Field("open")
+
+class Trade(BaseModel):
+    position_id: str
+    wallet: str
+    symbol: str
+    side: Literal["long", "short"]
+    size_usd: float
+    price: float
+    fee_usd: float
+    type: Literal["open", "close"] = "open"
 
 # Note: The Flames database viewer will automatically:
 # 1. Read these schemas from GET /schema endpoint
